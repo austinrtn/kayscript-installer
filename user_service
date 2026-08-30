@@ -1,0 +1,6 @@
+[Unit]
+Description=KayScript interface
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/alacritty --hold -e /usr/bin/sudo __SCRIPT__

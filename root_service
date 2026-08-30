@@ -1,0 +1,6 @@
+[Unit]
+Description=KayScript priveleged USB action 
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl --machine=__USER__@.host --user start __SERVICE__
