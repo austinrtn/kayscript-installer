@@ -1,6 +1,7 @@
+from logging import root
 import os
 import pwd
-from shutil import copyfile, which
+from shutil import copyfile, move, which
 from subprocess import CalledProcessError as ProcessError, run
 import sys
 from pathlib import Path
@@ -8,10 +9,12 @@ from tempfile import TemporaryDirectory
 
 from files import File, config_dir, files, sudoers_rule, project_dir, root_service, udev_rule, user_service, kayscript, kayscript_app_path
 
+root_dir: Path = Path.cwd()
 
 def install_script(work_dir: TemporaryDirectory[str], download_files: bool) -> None:
+    kayscript_compiled: bool = False
     _ = run(["sudo", "-v"], check=False)
-    
+   
     print("> Beginning Installation!")
     os.chdir(work_dir.name)
 
@@ -27,14 +30,18 @@ def install_script(work_dir: TemporaryDirectory[str], download_files: bool) -> N
         print()
 
     else:
-        compile() 
         for file in files:
             if not file.validate_tmp_path():
-                if file.name == "kayscript.sh": 
+                if file.name == "kayscript":
                     compile()
+                    kayscript_compiled = True
+                    
                 else: 
                     print(f"Missing file: {file.name}")
                     print("Exiting")
+
+            if file.name == "kayscript" and not kayscript_compiled: 
+                compile()
 
             source = file.tmp_path
             staged = Path(work_path / file.name)
@@ -126,13 +133,13 @@ def compile() -> None:
                 "pyinstaller",
                 "--onefile",
                 "--name", "kayscript",
-                "--distpath", str(Path.cwd()),
+                "--distpath", str(root_dir),
                 str(kayscript_app_path),
             ],
             check=True,
             capture_output=True,
         )
-
+        
     except ProcessError as err:
         print(f"Could not compile executable: {err.returncode}")
         return

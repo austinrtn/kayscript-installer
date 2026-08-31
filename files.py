@@ -113,8 +113,8 @@ kayscript_app_path = Path(Path.home() / "Documents/KayScript/app.py").resolve()
 config_dir = Path(Path.home() / ".config/systemd/user/").resolve()
 project_dir = Path("/var/lib/kayscript")
 
-gh_url = "https://raw.githubusercontent.com/austinrtn/KayScript/refs/heads/master/"
-kayscript_url= "https://github.com/austinrtn/KayScript/blob/c21bc06e163389a6f6afb82f8ceed6b9b7604df3/dist/kayscript"
+gh_url = "https://raw.githubusercontent.com/austinrtn/kayscript-installer/refs/heads/master/"
+kayscript_url = "https://github.com/austinrtn/KayScript/blob/master/dist/kayscript"
 
 udev_rule = File(
     name="udev_rule",
@@ -155,7 +155,7 @@ user_service = File(
 kayscript = File(
     name="kayscript",
     desc="Main Script",
-    url=f"{gh_url}dist/kayscript",
+    url=kayscript_url,
     dest=project_dir / "KayScript",
     mode=0o755,
     root_owned=True,
