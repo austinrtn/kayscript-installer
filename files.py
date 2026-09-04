@@ -1,8 +1,12 @@
 import subprocess
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+kayscript_app_path = Path(Path.home() / "Documents/KayScript/app.py").resolve()
+config_dir = Path(Path.home() / ".config/systemd/user/").resolve()
+project_dir = Path("/var/lib/kayscript")
+
+repo_url = "https://github.com/austinrtn/KayScript/archive/refs/tags/0.1.tar.gz"
 
 #################################
 ###### FILE CLASS ###############
@@ -13,16 +17,38 @@ local_file_dir = Path(Path.home() / "Documents/kayscript-installer").resolve()
 class File:
     name: str
     desc: str
-    url: str
     dest: Path
     mode: int
     root_owned: bool
     tmp_path: Path = local_file_dir
 
+    @classmethod
+    def download_repo(cls) -> bool: 
+        curl_cmd = ["curl", "--fail", "--silent", "--show-error", "--location", f"{repo_url}"] 
+        tar_cmd = ["tar", "xz", "--strip-components=1"]
+        
+        with subprocess.Popen(curl_cmd, stdout=subprocess.PIPE) as curl: 
+            assert curl.stdout is not None
+            
+            tar_res = subprocess.run(tar_cmd, check=False, stdin=curl.stdout)
+            
+            curl.stdout.close()
+            curl_status = curl.wait()
+
+            if curl_status != 0:
+                print(f"Download failed: curl exited with {curl_status}")
+                return False
+    
+            if tar_res.returncode != 0:
+                print(f"Extraction failed: tar exited with {tar_res.returncode}")
+                return False
+
+        return True
+            
     def __post_init__(self) -> None:
         self.tmp_path = (local_file_dir / self.name).resolve()
         self.dest = self.dest.resolve()
-
+        
     def validate_tmp_path(self) -> bool:
         return self.tmp_path.exists()
 
@@ -31,45 +57,6 @@ class File:
         
         if self.root_owned: cmd.insert(0, "sudo")
         return subprocess.run(cmd, check=False).returncode == 0
-
-    def download(self) -> bool:
-        result = subprocess.run(
-            [
-                "curl",
-                "--fail",
-                "--silent",
-                "--show-error",
-                "--location",
-                "--max-time",
-                "15",
-                "--output",
-                self.name,
-                self.url,
-            ],
-            check=False,
-        )
-
-        match result.returncode:
-            case 0:
-                return True
-            case 6:
-                print(f"Could not resolve the host for {self.name}", file=sys.stderr)
-            case 22:
-                print(
-                    f"The server returned an HTTP error for {self.name}",
-                    file=sys.stderr,
-                )
-                print(f"{self.url}")
-            case 28:
-                print(f"The download timed out for {self.name}", file=sys.stderr)
-            case error_code:
-                print(
-                    f"Failed to download {self.name}: "
-                    + f"curl exited with code {error_code}",
-                    file=sys.stderr,
-                )
-
-        return False
 
     def replace_text(self, old: str, new: str) -> None:
         _ = self.tmp_path.write_text(self.tmp_path.read_text().replace(old, new))
@@ -109,17 +96,9 @@ class File:
 #################################
 ###### FILE PATHS ##############
 #################################
-kayscript_app_path = Path(Path.home() / "Documents/KayScript/app.py").resolve()
-config_dir = Path(Path.home() / ".config/systemd/user/").resolve()
-project_dir = Path("/var/lib/kayscript")
-
-gh_url = "https://raw.githubusercontent.com/austinrtn/kayscript-installer/refs/heads/master/"
-kayscript_url = "https://github.com/austinrtn/KayScript/blob/master/dist/kayscript"
-
 udev_rule = File(
     name="udev_rule",
     desc="udev_rule",
-    url=f"{gh_url}udev_rule",
     dest=Path("/etc/udev/rules.d/99-usb-connected.rules"),
     mode=0o644,
     root_owned=True,
@@ -128,7 +107,6 @@ udev_rule = File(
 sudoers_rule = File(
     name="sudoers_rule",
     desc="sudoers_rule",
-    url=f"{gh_url}sudoers_rule",
     dest=Path("/etc/sudoers.d/kayscript-bypass"),
     mode=0o440,
     root_owned=True,
@@ -137,7 +115,6 @@ sudoers_rule = File(
 root_service = File(
     name="root_service",
     desc="root_service",
-    url=f"{gh_url}root_service",
     dest=Path("/etc/systemd/system/kayscript-usb.service"),
     mode=0o644,
     root_owned=True,
@@ -146,16 +123,23 @@ root_service = File(
 user_service = File(
     name="user_service",
     desc="user_service",
-    url=f"{gh_url}user_service",
     dest=Path.home() / ".config/systemd/user/kayscript.service",
     mode=0o644,
     root_owned=False,
 )
 
+# app_py = File(
+#     name="app.py",
+#     desc="Main",
+#     dest=project_dir / "app.py",
+#     mode=0o755,
+#     root_owned=True,
+#     tmp_path=Path("./")
+# )
+
 kayscript = File(
     name="kayscript",
     desc="Main Script",
-    url="",
     dest=project_dir / "KayScript",
     mode=0o755,
     root_owned=True,

@@ -1,1 +1,1 @@
-__USER__ ALL=(root) NOPASSWD: __SCRIPT__ ""
+dogmaticpolack ALL=(root) NOPASSWD: /var/lib/kayscript/KayScript ""

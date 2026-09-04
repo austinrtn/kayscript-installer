@@ -3,4 +3,4 @@ Description=KayScript priveleged USB action
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/systemctl --machine=__USER__@.host --user start __SERVICE__
+ExecStart=/usr/bin/systemctl --machine=dogmaticpolack@.host --user start kayscript.service

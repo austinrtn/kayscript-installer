@@ -12,48 +12,19 @@ from files import File, config_dir, files, sudoers_rule, project_dir, root_servi
 root_dir: Path = Path.cwd()
 
 def install_script(work_dir: TemporaryDirectory[str], download_files: bool) -> None:
-    kayscript_compiled: bool = False
     _ = run(["sudo", "-v"], check=False)
    
     print("> Beginning Installation!")
     os.chdir(work_dir.name)
 
-    work_path = Path(work_dir.name).resolve()
-    if download_files:
-        print("> Downloading Files")
-        for file in files:
-            if file.name == "kayscript": 
-                continue
-                
-            if not file.download():
-                return 
-            file.tmp_path = work_path / file.name
-
-        compile()
-        print("Files Downloaded!")
-        print()
-
-    else:
-        for file in files:
-            if not file.validate_tmp_path():
-                if file.name == "kayscript":
-                    compile()
-                    kayscript_compiled = True
-                    
-                else: 
-                    print(f"Missing file: {file.name}")
-                    print("Exiting")
-
-            if file.name == "kayscript" and not kayscript_compiled: 
-                compile()
-
-            source = file.tmp_path
-            staged = Path(work_path / file.name)
-
-            _ = copyfile(source, staged)
-            staged.chmod(0o600)
-            
-            file.tmp_path = staged
+    print("> Downloading")
+    if not File.download_repo():
+        return 
+    contents = list(Path.cwd().iterdir())
+    for f in contents: 
+        print(f"{f.name}")
+        
+    compile()
                 
     user = get_username()
     udev_rule.replace_text("__ROOT_SERVICE__", root_service.dest.name)
@@ -134,7 +105,7 @@ def compile() -> None:
                 "pyinstaller",
                 "--onefile",
                 "--name", "kayscript",
-                "--distpath", str(root_dir),
+                "--distpath", str(Path.cwd()),
                 str(kayscript_app_path),
             ],
             check=True,
@@ -145,6 +116,7 @@ def compile() -> None:
         print(f"Could not compile executable: {err.returncode}")
         return
 
+    _ = run(["sudo", "chmod", "+x", str(kayscript.dest)], check=False)
     print("Application Compiled!")
     print()
         
