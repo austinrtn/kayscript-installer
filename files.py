@@ -155,10 +155,10 @@ user_service = File(
 kayscript = File(
     name="kayscript",
     desc="Main Script",
-    url=kayscript_url,
+    url="",
     dest=project_dir / "KayScript",
     mode=0o755,
     root_owned=True,
-    tmp_path=Path("./dist/")
+    tmp_path=Path("./")
 )
 files = [udev_rule, root_service, kayscript, user_service, sudoers_rule]

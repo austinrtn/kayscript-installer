@@ -21,13 +21,13 @@ main() {
         exit 1
     fi
 
-    work_dir=mktemp()
+    work_dir="$(mktemp -d)"
     trap 'rm -rf "$work_dir"' EXIT
     
     cd "$work_dir"
-    curl --fail --location --output repo.tar.gz "$installer_url" |
-        tar -xz --strip-components-1
+    curl --fail --location "$installer_url" | tar -xz --strip-components=1
 
+    ls
     python "app.py"
 }
 

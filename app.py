@@ -22,10 +22,14 @@ def install_script(work_dir: TemporaryDirectory[str], download_files: bool) -> N
     if download_files:
         print("> Downloading Files")
         for file in files:
+            if file.name == "kayscript": 
+                continue
+                
             if not file.download():
                 return 
             file.tmp_path = work_path / file.name
 
+        compile()
         print("Files Downloaded!")
         print()
 
@@ -106,9 +110,6 @@ def install_script(work_dir: TemporaryDirectory[str], download_files: bool) -> N
     print("Installation Finished!")
 
 def compile() -> None: 
-    if input("Would you like to compile the application? [y/n]\n").lower() != "y":
-       return 
-       
     try: 
         ensure_pipx()
     except ProcessError as err:
