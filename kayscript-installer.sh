@@ -3,7 +3,7 @@ installer_url="https://github.com/austinrtn/kayscript-installer/archive/refs/tag
 pkg_manager_cmd=""
 
 main() {
-    if [[ -z $(command -v python) ]]; then 
+    if [[ -z $(command -v python3) ]]; then 
         echo "Need to install python"
         exit 1
     fi
@@ -14,7 +14,7 @@ main() {
     
     if [[ -n $(command -v pacman) ]]; then 
         pkg_manager_cmd="sudo pacman -S --needed __pkg__"
-    elif [[ -n $(command -v pacman) ]]; then 
+    elif [[ -n $(command -v apt) ]]; then 
         pkg_manager_cmd="sudo apt-get install -y __pkg__"
     else 
         echo "No supported package manager found..."
@@ -28,7 +28,7 @@ main() {
     echo "Downloading installer..."
     curl --fail --location --silent "$installer_url" | tar -xz --strip-components=1
 
-    python3 app.py --l "$pkg_manager_cmd"
+    python3 app.py --d "$pkg_manager_cmd"
 }
 
 main
