@@ -25,9 +25,9 @@ main() {
     trap 'rm -rf "$work_dir"' EXIT
     
     cd "$work_dir"
-    curl --fail --location "$installer_url" | tar -xz --strip-components=1
+    echo "Downloading installer..."
+    curl --fail --location --silent "$installer_url" | tar -xz --strip-components=1
 
-    ls
     python app.py --l "$pkg_manager_cmd"
 }
 
