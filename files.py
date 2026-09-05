@@ -5,7 +5,7 @@ from pathlib import Path
 config_dir = Path(Path.home() / ".config/systemd/user/").resolve()
 project_dir = Path("/var/lib/kayscript")
 
-repo_url = "https://github.com/austinrtn/KayScript/archive/refs/tags/1.0.tar.gz"
+repo_url = "https://github.com/austinrtn/KayScript/archive/refs/tags/1.1.tar.gz"
 
 #################################
 ###### FILE CLASS ###############

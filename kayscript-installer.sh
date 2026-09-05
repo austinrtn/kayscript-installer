@@ -1,5 +1,5 @@
 #!/bin/sh
-installer_url="https://github.com/austinrtn/kayscript-installer/archive/refs/tags/1.0.tar.gz"
+installer_url="https://github.com/austinrtn/kayscript-installer/archive/refs/tags/1.1.tar.gz"
 pkg_manager_cmd=""
 
 main() {
