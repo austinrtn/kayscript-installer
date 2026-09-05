@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 installer_url="https://github.com/austinrtn/kayscript-installer/archive/refs/tags/1.0.tar.gz"
 pkg_manager_cmd=""
 
