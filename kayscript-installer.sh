@@ -28,7 +28,7 @@ main() {
     echo "Downloading installer..."
     curl --fail --location --silent "$installer_url" | tar -xz --strip-components=1
 
-    python app.py --l "$pkg_manager_cmd"
+    python3 app.py --l "$pkg_manager_cmd"
 }
 
 main
