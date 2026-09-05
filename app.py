@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 
 from files import File, config_dir, files, sudoers_rule, project_dir, root_service, udev_rule, user_service, kayscript
 
+pkg_manager_cmd=""
 root_dir: Path = Path.cwd()
 local_path: Path = Path(Path.home() / "Documents/KayScript/kayscript-0.2.tar.gz").resolve()
 
@@ -139,15 +140,10 @@ def ensure_pipx() -> None:
         print("> Installing Pipx...")
     else: 
         return
-    
+
+    install_cmd = pkg_manager_cmd.replace("__pkg__", "python-pipx").split()
     _ = run(
-        [
-            "sudo",
-            "pacman",
-            "-S",
-            "--needed",
-            "python-pipx",
-        ],
+        install_cmd,
         check=True,
     )
 
@@ -243,19 +239,24 @@ def files_match(file: File) -> bool:
     raise RuntimeError(f"Could not compare {file.tmp_path} and {file.dest}")
     
 def main() -> None:
-    arg = "--d"
+    option = "--d"
+    global pkg_manager_cmd
+    pkg_manager_cmd = "sudo pacman -S --needed __pkg__"
+    
     if len(sys.argv) > 1:
-        arg = sys.argv[1]
+        option = sys.argv[1]
+    if len(sys.argv) > 2: 
+        pkg_manager_cmd = sys.argv[2]
 
-    if arg in {"--d", "--l"}:
-        download_files = arg == "--d"
+    if option in {"--d", "--l"}:
+        download_files = option == "--d"
         with TemporaryDirectory() as work_dir:
             install_script(Path(work_dir), download_files)
             
-    elif arg == "--r":
+    elif option == "--r":
         uninstall()
 
-    elif arg == "--c":
+    elif option == "--c":
         check()
 
 

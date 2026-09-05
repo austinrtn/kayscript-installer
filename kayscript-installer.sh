@@ -1,5 +1,5 @@
 #!/bin/sh
-installer_url="https://github.com/austinrtn/kayscript-installer/archive/refs/tags/0.1.tar.gz"
+installer_url="https://github.com/austinrtn/kayscript-installer/archive/refs/tags/1.0.tar.gz"
 pkg_manager_cmd=""
 
 main() {
@@ -13,11 +13,11 @@ main() {
     fi
     
     if [[ -n $(command -v pacman) ]]; then 
-        pkg_manager_cmd="pacman -S --needed {pkg}"
+        pkg_manager_cmd="sudo pacman -S --needed __pkg__"
     elif [[ -n $(command -v pacman) ]]; then 
-        pkg_manager_cmd="apt-get install -y {pkg}"
+        pkg_manager_cmd="sudo apt-get install -y __pkg__"
     else 
-        echo "No package manager found..."
+        echo "No supported package manager found..."
         exit 1
     fi
 
@@ -28,7 +28,7 @@ main() {
     curl --fail --location "$installer_url" | tar -xz --strip-components=1
 
     ls
-    python "app.py"
+    python app.py --l "$pkg_manager_cmd"
 }
 
 main
