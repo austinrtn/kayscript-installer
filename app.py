@@ -1,5 +1,6 @@
 import os
 import pwd
+import shlex
 from shutil import which
 from subprocess import CalledProcessError as ProcessError, run
 import sys
@@ -141,7 +142,7 @@ def ensure_pipx() -> None:
     else: 
         return
 
-    install_cmd = pkg_manager_cmd.replace("__pkg__", "python-pipx").split()
+    install_cmd = shlex.split(pkg_manager_cmd.replace("__pkg__", "python-pipx"))
     _ = run(
         install_cmd,
         check=True,
