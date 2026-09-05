@@ -2,7 +2,6 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-kayscript_app_path = Path(Path.home() / "Documents/KayScript/app.py").resolve()
 config_dir = Path(Path.home() / ".config/systemd/user/").resolve()
 project_dir = Path("/var/lib/kayscript")
 
@@ -11,7 +10,7 @@ repo_url = "https://github.com/austinrtn/KayScript/archive/refs/tags/0.1.tar.gz"
 #################################
 ###### FILE CLASS ###############
 #################################
-local_file_dir = Path(Path.home() / "Documents/kayscript-installer").resolve()
+local_file_dir = Path.cwd().resolve()
 
 @dataclass()
 class File:
@@ -23,14 +22,19 @@ class File:
     tmp_path: Path = local_file_dir
 
     @classmethod
-    def download_repo(cls) -> bool: 
+    def download_repo(cls, destination: Path) -> bool:
         curl_cmd = ["curl", "--fail", "--silent", "--show-error", "--location", f"{repo_url}"] 
-        tar_cmd = ["tar", "xz", "--strip-components=1"]
+        tar_cmd = ["tar", "-xz", "--strip-components=1"]
         
         with subprocess.Popen(curl_cmd, stdout=subprocess.PIPE) as curl: 
             assert curl.stdout is not None
             
-            tar_res = subprocess.run(tar_cmd, check=False, stdin=curl.stdout)
+            tar_res = subprocess.run(
+                tar_cmd,
+                check=False,
+                cwd=destination,
+                stdin=curl.stdout,
+            )
             
             curl.stdout.close()
             curl_status = curl.wait()

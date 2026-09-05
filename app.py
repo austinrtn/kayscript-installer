@@ -1,30 +1,41 @@
-from logging import root
 import os
 import pwd
-from shutil import copyfile, move, which
+from shutil import which
 from subprocess import CalledProcessError as ProcessError, run
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from files import File, config_dir, files, sudoers_rule, project_dir, root_service, udev_rule, user_service, kayscript, kayscript_app_path
+from files import File, config_dir, files, sudoers_rule, project_dir, root_service, udev_rule, user_service, kayscript
 
 root_dir: Path = Path.cwd()
+local_path: Path = Path(Path.home() / "Documents/KayScript/kayscript-0.2.tar.gz").resolve()
 
-def install_script(work_dir: TemporaryDirectory[str], download_files: bool) -> None:
+def install_script(work_dir: Path, download_files: bool) -> None:
     _ = run(["sudo", "-v"], check=False)
    
     print("> Beginning Installation!")
-    os.chdir(work_dir.name)
 
-    print("> Downloading")
-    if not File.download_repo():
-        return 
-    contents = list(Path.cwd().iterdir())
-    for f in contents: 
-        print(f"{f.name}")
-        
-    compile()
+    if download_files:
+        print("> Downloading")
+        if not File.download_repo(work_dir):
+            return
+    else:
+        if not local_path.exists():
+            print(f"Local Archive Path does not exist: {local_path}")
+            raise RuntimeError
+        res = run(
+            ["tar", "-xzf", str(local_path), "--strip-components=1"],
+            check=False,
+            cwd=work_dir,
+        )
+
+        if res.returncode != 0:
+            print(f"Failed to unarchive local tar file: {res.returncode}")
+            raise RuntimeError
+
+    if not compile(work_dir):
+        return
                 
     user = get_username()
     udev_rule.replace_text("__ROOT_SERVICE__", root_service.dest.name)
@@ -80,45 +91,48 @@ def install_script(work_dir: TemporaryDirectory[str], download_files: bool) -> N
     print()
     print("Installation Finished!")
 
-def compile() -> None: 
+def compile(work_dir: Path) -> bool:
     try: 
         ensure_pipx()
     except ProcessError as err:
         print(f"Could not install pipx: {err.returncode}")
-        return
+        return False
 
     try:
         ensure_pyinstaller()
     except ProcessError as err:
         print(f"Could not install Pyinstaller: {err.returncode}")
-        return
+        return False
 
+    kayscript_app_path = work_dir / "app.py"
     if not kayscript_app_path.exists(): 
         print("Cannnot find the source compiler python program.")
         print(f"{kayscript_app_path}")
-        raise RuntimeError
+        return False
 
     print("> Compiling Python Applicaiton...")
     try: 
         _ = run(
             [
                 "pyinstaller",
+                "--clean",
                 "--onefile",
                 "--name", "kayscript",
-                "--distpath", str(Path.cwd()),
+                "--workpath", str(work_dir / ".pyinstaller-build"),
+                "--distpath", str(root_dir),
                 str(kayscript_app_path),
             ],
             check=True,
-            capture_output=True,
+            cwd=work_dir,
         )
         
     except ProcessError as err:
         print(f"Could not compile executable: {err.returncode}")
-        return
+        return False
 
-    _ = run(["sudo", "chmod", "+x", str(kayscript.dest)], check=False)
     print("Application Compiled!")
     print()
+    return True
         
 def ensure_pipx() -> None:
     if which("pipx") is None: 
@@ -234,13 +248,9 @@ def main() -> None:
         arg = sys.argv[1]
 
     if arg in {"--d", "--l"}:
-        work_dir = TemporaryDirectory()
         download_files = arg == "--d"
-        try:
-            install_script(work_dir, download_files)
-        finally:
-            work_dir.cleanup()
-
+        with TemporaryDirectory() as work_dir:
+            install_script(Path(work_dir), download_files)
             
     elif arg == "--r":
         uninstall()
