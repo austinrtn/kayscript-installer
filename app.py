@@ -73,7 +73,7 @@ def install_script(work_dir: Path, download_files: bool) -> None:
 
         try:
             _ = run(
-                ["sudo", "python", "-m", "venv", str(project_dir / ".venv")], check=True
+                ["sudo", "python3", "-m", "venv", str(project_dir / ".venv")], check=True
             )
         except ProcessError as error:
             print(
